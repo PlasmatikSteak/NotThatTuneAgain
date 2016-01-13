@@ -1,4 +1,4 @@
-// Not That Tune Again v.1.2 - Ohai!
+// Not That Tune Again v.1.2 - Ohai! - Michal Was here!
 var blocked_artists = ['Justin Beiber'];
 var blocked_tracks = [];
 var change_stations = ['p3', 'p7mix', 'p6beat'];
