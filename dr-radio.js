@@ -1,4 +1,4 @@
-// Not That Tune Again v.1.2
+// Not That Tune Again v.1.2 - Ohai!
 var blocked_artists = ['Justin Beiber'];
 var blocked_tracks = [];
 var change_stations = ['p3','p7mix','p6beat'];
