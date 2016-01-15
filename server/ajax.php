@@ -21,6 +21,10 @@ switch ($_REQUEST['action']) {
 		}
 		break;
 
+	case 'get_playing':
+		echo json_encode(get_playing());
+		break;
+
 	default:
 		echo json_encode('Not supported!');
 		break;
@@ -77,6 +81,25 @@ function update_web($data){
 	mysql_close($connection);
 
 	return $row;
+}
+
+function get_playing(){
+	include("config.php");
+
+	$connection = mysql_connect($servername, $dbusername, $dbpassword);
+	mysql_select_db($dbname, $connection) or die (mysql_error());
+
+	mysql_set_charset('utf8');
+
+	$result = mysql_query("SELECT `Name`,`playing_station`, `playing_artist`, `playing_track` FROM `NotThatTuneAgain` WHERE `last_update` > DATE_SUB(NOW(),INTERVAL 5 MINUTE)");
+
+	while($row = mysql_fetch_array($result)){
+		$playing['playing'][] = array('name' => $row['Name'],'station' => $row['playing_station'], 'artist' => $row['playing_artist'], 'track' => $row['playing_track']);
+	}
+
+	mysql_close($connection);
+
+	return $playing;
 }
 
 ?>
