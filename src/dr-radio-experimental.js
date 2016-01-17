@@ -2,7 +2,7 @@
 var blocked_artists = [];//['OneRepublic', 'OMD', 'Arvid', 'Palace Winter', 'Meghan Trainor', 'Gilli'];
 var blocked_tracks = [];//['Teach Me'];
 var change_stations = [];//['p7mix', 'p6beat', 'p8jazz'];
-var remote_web = '';
+var remote_web = 'http://sewers.dk/NotThatTuneAgain/';
 
 var NotThatTuneAgain_cookie = getCookie('NotThatTuneAgain');
 if(NotThatTuneAgain_cookie){
@@ -20,10 +20,11 @@ if(NotThatTuneAgain_cookie){
 }
 
 makeui();
-// Let's check if the current number is blocked
 var num_check = setInterval(checkNumber, 3000);
-// Let's update the webpage with what is playing and get the latest lists
-var web_update = setInterval(update_web, 3000);
+var web_update;
+if(remote_web != ''){
+	web_update = setInterval(update_web, 3000);
+}
 
 function checkNumber(){
 	var artist = jQuery('.playlist-items .track.now-playing .name[itemprop="byArtist"]').text();
@@ -43,7 +44,9 @@ function checkNumber(){
 function makeui(){
 	// Make our stylesheet and attach it to the page!
 	var sheet = document.createElement('style');
-	sheet.innerHTML = "#notthattuneagain-ui {z-index: 9999; width: 200px; height: 250px; position: fixed; top: 150px; border-radius: 5px; border: 1px solid black; transition: left 0.5s; color: rgb(255, 255, 255); left: -200px; background-color: rgb(166, 161, 161);overflow-y: auto;}";
+	sheet.innerHTML = "#notthattuneagain-ui {z-index: 9999;width: 200px;height: auto;position: fixed;top: 150px;border-radius: 5px;border: 1px solid black;transition: left 0.5s;color: rgb(255, 255, 255);left: -202px;background-color: rgb(166, 161, 161);border-top-right-radius: 0px;font-size: 13px;font-family: sans-serif;}";
+	sheet.innerHTML += "#notthattuneagain-ui:hover {left: -5px;}";
+	sheet.innerHTML += "#notthattuneagain-ui #content {overflow-y: auto;height: auto;}";
 	sheet.innerHTML += "#buttons {margin-top: 15px; margin-left: 30px}";
 	sheet.innerHTML += "#button .btn, #buttons .btn {background: #f51111; background-image: -webkit-linear-gradient(top, #f51111, #b82c2c); background-image: -moz-linear-gradient(top, #f51111, #b82c2c); background-image: -ms-linear-gradient(top, #f51111, #b82c2c); background-image: -o-linear-gradient(top, #f51111, #b82c2c); background-image: linear-gradient(to bottom, #f51111, #b82c2c); -webkit-border-radius: 20; -moz-border-radius: 20; border-radius: 20px; font-family: Arial; color: #ffffff; font-size: 12px; padding: 6px 10px 6px 10px; text-decoration: none;}";
 	sheet.innerHTML += "#button .btn, #buttons .btn:hover {background: #e84c4c; background-image: -webkit-linear-gradient(top, #e84c4c, #e36262); background-image: -moz-linear-gradient(top, #e84c4c, #e36262); background-image: -ms-linear-gradient(top, #e84c4c, #e36262); background-image: -o-linear-gradient(top, #e84c4c, #e36262); background-image: linear-gradient(to bottom, #e84c4c, #e36262); text-decoration: none;}";
@@ -54,31 +57,37 @@ function makeui(){
 	sheet.innerHTML += "#no-lists ul li {cursor: pointer;}";
 	sheet.innerHTML += "#no-lists ul li:hover {text-decoration: line-through;}";
 	sheet.innerHTML += "#button {position: absolute; right: 125px; width: 85px; top: 5px;}";
+	sheet.innerHTML += "#notthattuneagain-ui #settings {height: 100%; width: 95%; z-index: 9999; transition: left 0.5s; position: absolute; top: 0px; background-color: rgb(166, 161, 161); left: -175px; border-right: 1px solid black;}";
+	sheet.innerHTML += "#notthattuneagain-ui #settings:hover {left: -20px;}";
+	sheet.innerHTML += "#notthattuneagain-ui #activator {position: absolute;right: -51px;background-color: rgb(166, 161, 161);height: 33px;width: 50px;border-right: 1px solid black;border-bottom: 1px solid black;border-top: 1px solid black;border-top-right-radius: 5px;top: -1px;border-bottom-right-radius: 5px;text-align: center;padding-top: 17px;}";
+	sheet.innerHTML += "#notthattuneagain-ui #settings .group {position: absolute;right: 0px;width: 80%;margin-top: 10px;}";
 	document.body.appendChild(sheet);
 
 	jQuery('#channel-selector').prepend('<div id="button"><a href="#" id="add-station" class="btn">+ station</a></div>');
-	jQuery('body').append('<div id="notthattuneagain-ui"><div id="buttons"><a href="#" id="add-artist" class="btn">+ Artist</a>&nbsp;<a href="#" id="add-track" class="btn">+ Track</a></div><div id="no-lists"><div id="no-artists"><span>Blocked Artists</span><ul></ul></div><div id="no-tracks"><span>Blocked Tracks</span><ul></ul></div><div id="allowed-stations"><span>Allowed stations</span><ul></ul></div></div></div>');
-	jQuery('#notthattuneagain-ui').unbind().hover(function(){
-		jQuery(this).css('left', '-5px');
-	}, function(){
-		jQuery(this).css('left', '-200px');
-	});
+	jQuery('body').append('<div id="notthattuneagain-ui"><div id="activator"><span>NTTA</span></div><div id="content"><div id="buttons"><a href="#" id="add-artist" class="btn">+ Artist</a>&nbsp;<a href="#" id="add-track" class="btn">+ Track</a></div><div id="no-lists"><div id="no-artists"><span>Blocked Artists</span><ul></ul></div><div id="no-tracks"><span>Blocked Tracks</span><ul></ul></div><div id="allowed-stations"><span>Allowed stations</span><ul></ul></div></div><div id="settings"><div class="group"><label><input type="checkbox" checked="checked" id="webserver-talk">Webserver talk</label><label><select id="fallback-station"></select>Fallback station</label></div></div></div></div>');
 	jQuery('#add-artist').unbind().on('click', function(){
 		var artist = jQuery('.playlist-items .track.now-playing .name[itemprop="byArtist"]').text();
 		if(jQuery.inArray(artist, blocked_artists) !== -1){
 			alert(artist+' is already blocked!');
 		}else{
 			blocked_artists.push(artist);
-			updateui();
+			if(jQuery('#webserver-talk').is(':checked')){
+				save_lists(blocked_artists, blocked_tracks, change_stations);
+			}
+			updateUI();
 		}
 	});
+	
 	jQuery('#add-track').unbind().on('click', function(){
 		var track = jQuery('.playlist-items .track.now-playing .track').find('a').text();
 		if(jQuery.inArray(track, blocked_tracks) !== -1){
 			alert(track+' is already blocked!');
 		}else{
 			blocked_tracks.push(track);
-			updateui();
+			if(jQuery('#webserver-talk').is(':checked')){
+				save_lists(blocked_artists, blocked_tracks, change_stations);
+			}
+			updateUI();
 		}
 	});
 
@@ -88,16 +97,25 @@ function makeui(){
 			alert(station+' is already added!');
 		}else{
 			change_stations.push(station);
-			updateui();
+			if(jQuery('#webserver-talk').is(':checked')){
+				save_lists(blocked_artists, blocked_tracks, change_stations);
+			}
+			updateUI();
 		}
 	});
+
+	var channels = jQuery('select[name="channels"] option').clone();
+	jQuery('#fallback-station').append(channels);
 
 	jQuery(document).on('click', '#no-artists > ul > li', function(){
 		if(confirm('Remove "'+jQuery(this).text()+'" ?') ){
 			var found = jQuery.inArray(jQuery(this).text(), blocked_artists);
 			if(found !== -1){
 				blocked_artists.splice(found, 1);
-				updateui();
+				if(jQuery('#webserver-talk').is(':checked')){
+					save_lists(blocked_artists, blocked_tracks, change_stations);
+				}
+				updateUI();
 			}
 		}
 	});
@@ -107,25 +125,41 @@ function makeui(){
 			var found = jQuery.inArray(jQuery(this).text(), blocked_tracks);
 			if(found !== -1){
 				blocked_tracks.splice(found, 1);
-				updateui();
+				if(jQuery('#webserver-talk').is(':checked')){
+					save_lists(blocked_artists, blocked_tracks, change_stations);
+				}
+				updateUI();
 			}
 		}
 	});
+
+	if(remote_web != ''){
+		jQuery('#webserver-talk').unbind().on('change', function(){
+			if(jQuery(this).is(':checked')){
+				web_update = setInterval(update_web, 3000);
+			}else{
+				clearInterval(web_update);
+			}
+		});
+	}
 
 	jQuery(document).on('click', '#allowed-stations > ul > li', function(){
 		if(confirm('Remove "'+jQuery(this).text()+'" ?') ){
 			var found = jQuery.inArray(jQuery(this).text(), change_stations);
 			if(found !== -1){
 				change_stations.splice(found, 1);
-				updateui();
+				if(jQuery('#webserver-talk').is(':checked')){
+					save_lists(blocked_artists, blocked_tracks, change_stations);
+				}
+				updateUI();
 			}
 		}
 	});
 	get_lists(get_guid());
-	updateui();
+	updateUI();
 }
 
-function updateui(){
+function updateUI(){
 	//Let's sort the arrays!
 	blocked_artists.sort();
 	blocked_tracks.sort();
@@ -177,7 +211,7 @@ function delCookie(key){
 
 function save_lists(blocked_artists, blocked_tracks, change_stations){
 	var guid = get_guid();
-	jQuery.post('http://sewers.dk/NotThatTuneAgain/ajax.php', { 'action': 'save_lists', 'guid':guid, 'blocked_artists': JSON.stringify(blocked_artists), 'blocked_tracks': JSON.stringify(blocked_tracks), 'change_stations': JSON.stringify(change_stations)}, function (data) {
+	jQuery.post(remote_web+'ajax.php', { 'action': 'save_lists', 'guid':guid, 'blocked_artists': blocked_artists, 'blocked_tracks': blocked_tracks, 'change_stations': change_stations}, function (data) {
 		console.log(data);
 	});
 }
@@ -194,17 +228,16 @@ function get_lists(saved_guid){
 			if(data.change_stations){
 				change_stations = data.change_stations.split('|');
 			}
-			updateui();
+			updateUI();
 			return true;
 		}else{
-			// Shouldn't happen
 			console.log('GUID not found on server!');
 			return false;
 		}
 	});
 }
 
-function update_web(guid){
+function update_web(){
 	var artist = jQuery('.playlist-items .track.now-playing .name[itemprop="byArtist"]').text();
 	var track = jQuery('.playlist-items .track.now-playing .track').find('a').text();
 	var current_station = jQuery('select[name="channels"]').val();
@@ -221,10 +254,9 @@ function update_web(guid){
 			if(data.change_stations){
 				change_stations = data.change_stations.split('|');
 			}
-			updateui();
+			updateUI();
 			return true;
 		}else{
-			// Shouldn't happen
 			console.log('GUID not found on server!');
 			return false;
 		}
